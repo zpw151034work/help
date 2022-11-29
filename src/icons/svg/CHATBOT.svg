@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="110px" height="110px" viewBox="0 0 110 110" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>CHATBOT</title>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="资源服务市场备份-4" transform="translate(-1450.000000, -2104.000000)">
+            <g id="CHATBOT" transform="translate(1450.000000, 2104.000000)">
+                <rect id="矩形" fill="#026DB8" x="0" y="0" width="110" height="110" rx="4"></rect>
+                <g id="chatbot" transform="translate(22.000000, 22.000000)">
+                    <g id="编组-32备份">
+                        <rect id="矩形" stroke-opacity="0.35" stroke="#8AFCA1" stroke-width="3" x="2.5" y="3.5" width="56" height="37"></rect>
+                        <g id="编组" transform="translate(1.000000, 3.470947)" opacity="0.402775254" stroke="#35FAA3" stroke-width="3">
+                            <g id="形状">
+                                <path d="M1.0658141e-14,0 L57.4672852,0 L57.4672852,12.0201416 M59,37.0549316 L1.52124023,37.0549316 L1.52124023,26.1911621"></path>
+                            </g>
+                        </g>
+                        <circle id="椭圆形" fill="#35FAA3" cx="3" cy="3" r="3"></circle>
+                        <circle id="椭圆形备份-17" fill="#35FAA3" cx="58" cy="41" r="3"></circle>
+                    </g>
+                    <g id="编组-32" transform="translate(18.000000, 7.000000)" stroke="#35FAA3" stroke-width="2">
+                        <line x1="7.13587702" y1="29.5" x2="18.135877" y2="29.5" id="直线-10"></line>
+                        <rect id="矩形" x="4.63587702" y="0" width="16" height="19" rx="8"></rect>
+                        <path d="M25.2788884,14.0383672 C23.9106893,19.752424 18.7693204,24 12.635877,24 C6.51304389,24 1.37885586,19.7671071 -6.92779167e-14,14.0680084 M12.5,24.5383672 L12.5,28.5383672" id="形状"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

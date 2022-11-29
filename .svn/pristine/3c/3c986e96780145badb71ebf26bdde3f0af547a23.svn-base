@@ -1,0 +1,19 @@
+/**
+ * Created by mapbar_front on 2020/1/6.
+ */
+import request from '@/utils/request'
+
+//技能详情
+export function skillDetail(id) {
+  return request({
+    url: `market/skillMarket/selectSkill?skillId=${id}`,
+    method: 'get',
+  })
+}
+//机器人详情
+export function robotDetail(id) {
+  return request({
+    url: `market/robotMarket/selectRobot?robotId=${id}`,
+    method: 'get',
+  })
+}

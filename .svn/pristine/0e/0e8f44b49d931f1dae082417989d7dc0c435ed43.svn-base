@@ -1,0 +1,33 @@
+<template>
+  <div class="foot">
+    <div class="content">
+      <div class="left">
+        <div class="contact"></div>
+        <ul class="info">
+          <li>客服咨询</li>
+          <li>服务电话：135-1085-1315</li>
+
+        </ul>
+      </div>
+      <div class="right">
+        <h3>北京有限元科技有限公司</h3>
+        <ul class="info">
+          <li><span>地址：</span>北京市海淀区王庄路1号清华同方科技广场B座27-28层</li>
+          <li><span>邮编：</span>100083</li>
+
+          <li><span>手机：</span>135-1085-1315</li>
+
+          <li><span>邮箱：</span>changan.zhou@zkj.com</li>
+        </ul>
+        <!-- <div class="link">
+          <span class="a1" />
+          <span class="a2" />
+          <span class="a3" />
+        </div> -->
+      </div>
+
+    </div>
+
+    <div class="foot-box">copyright@2019 有限元 京ICP备16065273号</div>
+  </div>
+</template>

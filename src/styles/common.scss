@@ -1,0 +1,27 @@
+li {
+  list-style: none;
+}
+ul,
+h2,
+h3,
+h5 {
+  margin: 0px;
+  padding: 0px;
+}
+textarea,
+input {
+  outline: none;
+  color: #999;
+}
+a.a-blue {
+  color: #4865ea;
+}
+.public-container {
+  margin: 20px;
+  height: calc(100vh - 78px);
+  background: #fff;
+  padding: 20px;
+  overflow: auto;
+}
+
+

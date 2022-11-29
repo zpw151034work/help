@@ -1,0 +1,128 @@
+<template>
+    <div class="head">
+        <div class="head-box">
+            <div class="logo">
+                <router-link to="/"><img src="./../../assets/register/logo-white.png"></router-link>
+            </div>
+            <div class="search-box">
+                <!-- <div v-if="load" class="search-right">
+          <a href="/plat" class="a40">管理控制台</a>
+          <span class="load-box">
+            <router-link to="/login" class="load">登录</router-link> |
+            <router-link to="/" class="load">注册</router-link>
+          </span>
+        </div> -->
+                <div class="search-right">
+                    <span class="load-box-load">
+                        <router-link to="/" class="load">返回首页</router-link>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+// import ElInput from '../../../node_modules/element-ui/packages/input/src/input'
+    export default {
+        name: 'Head',
+        // components: { ElInput },
+        props: {
+            load: Boolean
+        },
+        data() {
+            return {
+                checked: true
+            }
+        },
+        methods: {
+            searchEvent() {
+                this.$router.push({ path: '/search' })
+            }
+        }
+    }
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped lang="scss">
+.head {
+  background: #4C7EE9;
+  height: 60px;
+  line-height: 60px;
+  width: 100%;
+  display: block;
+  position: absolute;
+  top: 0;
+  z-index: 11;
+  .head-box {
+    width: 1180px;
+    margin: 0px auto;
+    .logo {
+      width: 120px;
+      float: left;
+      height: 38px;
+    }
+    .logo img {
+      margin-top: 11px;
+    }
+  }
+}
+
+.search-box {
+  color: #fff;
+  line-height: 38px;
+  float: right;
+  .search-input,
+  .search-right {
+    display: inline;
+    line-height: 60px;
+  }
+  .search-input {
+    width: 435px;
+    height: 40px;
+    background: #fff;
+    border-radius: 6px;
+    position: relative;
+    margin-top: 20px;
+    float: left;
+    margin-right: 30px;
+    input {
+      border: 0px;
+      width: 400px;
+      font-size: 14px;
+      position: absolute;
+      top: 0px;
+      height: 40px;
+      left: 5px;
+      outline: none;
+    }
+    .search-button {
+      // background: url(./../../assets/index/icon-1.png);
+      width: 40px;
+      height: 40px;
+      position: absolute;
+      top: 0px;
+      right: 0px;
+    }
+  }
+  .load-box {
+    opacity: 0.5;
+    a {
+      color: #fff;
+      font-size: 14px;
+    }
+  }
+  .load-box-load {
+    color: #626262;
+    font-size: 14px;
+    a {
+      color: #fff;
+      font-size: 14px;
+    }
+  }
+
+  .a40 {
+    margin-right: 40px;
+  }
+}
+</style>

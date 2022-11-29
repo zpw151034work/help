@@ -1,0 +1,1034 @@
+<template>
+  <div class="detail-container">
+    <Head />
+    <div class="detail">
+      <div class="banner center" v-if="picList.length>0">
+        <div class="banner-content" v-if="picList.length>0">
+          <div class="content" v-if="picList.length>0">
+            <ul class="banner-ul">
+              <li class="banner-item">
+                <img class="banner-img" :src="picList && picList[currentIndex].picUrl" />
+              </li>
+            </ul>
+          </div>
+
+          <div class="banner-samll-box" ref="bannelSmall"  v-if="picList.length>0">
+            <ul class="samll-ul">
+              <li
+                :key="index"
+                :class="[{ bannerActive: currentIndex === index },bannerSMItem]"
+                v-for="(item,index) in picList"
+                @click="smallItemEvent(item,index)"
+              >
+                <img class="banner-small-img" :src="item.thmnailUrl" />
+              </li>
+            </ul>
+          </div>
+
+          <div class="robot-info" v-if="picList.length>0">
+            <div class="robot-title space-between">
+              <div class="center">
+                {{ detailData.name }}
+              </div>
+              <div>
+                <el-rate class="inline-block" disabled v-model="useCount"></el-rate>
+                <span class="useCount">使用数量：{{ detailData.useCount }}</span>
+              </div>
+            </div>
+            <p class="robot-desc">
+              {{ detailData.desc}}
+            </p>
+            <div class="condition space-between">
+              <div class="condition-left">
+                <p class="release-time">发布时间：{{ detailData.publishTime }}</p>
+                <p class="use-condition">使用条件：{{ detailData.preCondition }}</p>
+                <p class="version" v-if="this.$route.query.flag === 'skill'">应用版本：{{ detailData.version }}</p>
+              </div>
+              <div v-if="detailData.price" class="price-right center">
+                ¥{{ detailData.price && detailData.price.toFixed(2)}}
+              </div>
+              <div class="price-right center" v-else>
+                免费
+              </div>
+            </div>
+            <div class="tags space-between">
+              <div class="tags-left center">
+                <div class="tag-group">
+                  <el-tag
+                    class="tag-name"
+                    v-for="tagItem in detailData.list"
+                    :key="tagItem.name"
+                    effect="dark"
+                  >
+                    {{ tagItem.name }}
+                  </el-tag>
+                </div>
+              </div>
+              <div class="tags-right">
+                <el-button
+                  style="background: #3969E7;border: 1px solid #fff"
+                  type="primary"
+                  @click="downEvent(detailData)"
+                >
+                  {{ detailData.downCount?'已下载':'立即下载' }}
+                </el-button>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="this.$route.query.flag === 'skill'">
+            <DiaLog
+              :title="title"
+              :skillItem = "skillItem"
+              :skillDiaVis="skillDiaVisData"
+              @confirm="parentSkillYesEvent"
+              @no="parentSkillNoEvent"
+              @beforeClose="beforeCloseEvent"
+            />
+          </div>
+          <div>
+            <RobotDiaLog
+              :nameTitle="nameTitle"
+              :codeTitle="codeTitle"
+              :robotTitle="robotTitle"
+              :robotName="robotName"
+              :robotCode="robotCode"
+              :robotDiaVis="robotDiaVisData"
+              @close="closeEvent"
+              @robotBeforeClose="robotBeforeCloseEvent"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!--<div class="instructions center">-->
+        <!--<div class="instru-content">-->
+          <!--<h3 class="use justify-content">使用说明</h3>-->
+          <!--<p class="use-eng justify-content">Instructions</p>-->
+          <!--&lt;!&ndash;功能说明&ndash;&gt;-->
+          <!--<div class="fun-desc">-->
+            <!--<div class="desc-up">-->
+              <!--<div class="up">-->
+                <!--<div class="func-img inline-block blue-color">-->
+                <!--</div>-->
+                <!--<h5 class="func-desc inline-block blue-color">功能说明</h5>-->
+              <!--</div>-->
+            <!--</div>-->
+            <!--<div class="desc-down">-->
+              <!--<div>-->
+                <!--<ul>-->
+                  <!--<li class="font-size12">-->
+                    <!--主要通过指定目录下的发票图片来自动识别相关信息，并生成结果文件。-->
+                  <!--</li>-->
+                <!--</ul>-->
+              <!--</div>-->
+            <!--</div>-->
+          <!--</div>-->
+          <!--<div class="line"></div>-->
+          <!--&lt;!&ndash;优化说明&ndash;&gt;-->
+          <!--<div class="fun-desc">-->
+            <!--<div class="desc-up">-->
+              <!--<div class="up">-->
+                <!--<div class="opt-img inline-block blue-color">-->
+
+                <!--</div>-->
+                <!--<h5 class="opt-desc inline-block blue-color">优化说明</h5>-->
+              <!--</div>-->
+            <!--</div>-->
+            <!--<div class="desc-down">-->
+              <!--<ul>-->
+                <!--<li class="instru-item">-->
+                  <!--1、在之前版本按照财务习惯的口径，重新定义了发票代码及发票号码，便于财务人员理解；-->
+                <!--</li>-->
+                <!--<li class="instru-item">-->
+                  <!--2、增加了图片去重功能，同一张图片不会被写入两次（流程中断后重新运行，会接着上次运行的结果继续往下写；-->
+                <!--</li>-->
+                <!--<li class="instru-item">-->
+                  <!--3、若同一张发票拍了两次，则需要人工通过excel中排查，删除数据缺失的行。-->
+                <!--</li>-->
+              <!--</ul>-->
+            <!--</div>-->
+          <!--</div>-->
+          <!--<div class="line"></div>-->
+          <!--&lt;!&ndash;备注说明&ndash;&gt;-->
+          <!--<div class="fun-desc">-->
+            <!--<div class="desc-up">-->
+              <!--<div class="up">-->
+                <!--<div class="mark-img inline-block blue-color">-->
+
+                <!--</div>-->
+                <!--<h5 class="mark-desc inline-block blue-color">备注说明</h5>-->
+              <!--</div>-->
+            <!--</div>-->
+            <!--<div class="desc-down">-->
+              <!--<ol>-->
+                <!--<li class="instru-item">-->
+                  <!--1、每日运行上线（100次识别），若企业需要大批量使用此功能，请联系艺赛旗（咨询电话400-8218-738）；-->
+                <!--</li>-->
+                <!--<li class="instru-item">-->
+                  <!--2、发票识别准确度取决于扫描/拍摄设备及拍摄光线，若需要提升准确度，请联系艺赛旗（咨询电话400-8218-738）。-->
+                <!--</li>-->
+              <!--</ol>-->
+            <!--</div>-->
+          <!--</div>-->
+          <!--<div class="line"></div>-->
+          <!--&lt;!&ndash;参数路径&ndash;&gt;-->
+          <!--<div class="fun-desc">-->
+            <!--<div class="desc-up">-->
+              <!--<div class="up">-->
+                <!--<div class="params-img inline-block blue-color">-->
+
+                <!--</div>-->
+                <!--<h5 class="params-desc inline-block blue-color">参数路径</h5>-->
+              <!--</div>-->
+            <!--</div>-->
+            <!--<div class="desc-down">-->
+              <!--<ul>-->
+                <!--<li class="instru-item">-->
+                  <!--发票存放路径：此处用于存放待识别的发票图片路径（图片格式需要为jpg、png格式，pdf将不被识别）；-->
+                <!--</li>-->
+                <!--<li class="instru-item">-->
+                  <!--输出路径： 用于存放结果文件路径。-->
+                <!--</li>-->
+              <!--</ul>-->
+            <!--</div>-->
+          <!--</div>-->
+          <!--<div class="line"></div>-->
+          <!--<div class="banner-img">-->
+            <!--<ul>-->
+              <!--<li>-->
+                <!--<img src="https://www.baidu.com/img/bd_logo1.png"/>-->
+              <!--</li>-->
+            <!--</ul>-->
+          <!--</div>-->
+        <!--</div>-->
+      <!--</div>-->
+      <!--使用说明-->
+      <div class="instructions center" v-html="extendListContent"></div>
+      <!--典型客户-->
+      <div class="customer center" v-html="typicalCustomerHtml">
+        <!--<div class="customer-content">-->
+          <!--<h3 class="typical-customer justify-content font-color">典型客户</h3>-->
+          <!--<p class="customer-eng justify-content font-color">Typical customer</p>-->
+          <!--<div class="customer-box">-->
+            <!--<ul class="customer-ul">-->
+              <!--&lt;!&ndash;<li class="customer-item" v-for="item in picList">&ndash;&gt;-->
+                <!--&lt;!&ndash;<img :src="item.picUrl"/>&ndash;&gt;-->
+              <!--&lt;!&ndash;</li>&ndash;&gt;-->
+              <!--<li class="customer-item">-->
+                <!--<img src="https://www.baidu.com/img/bd_logo1.png"/>-->
+              <!--</li>-->
+              <!--<li class="customer-item">-->
+                <!--<img src="https://www.baidu.com/img/bd_logo1.png"/>-->
+              <!--</li>-->
+            <!--</ul>-->
+          <!--</div>-->
+        <!--</div>-->
+      </div>
+      <!--客户服务-->
+      <div class="serves center" v-html="customerServiceHtml">
+        <!--<div class="serves-content">-->
+          <!--<h3 class="after-service justify-content">客户服务</h3>-->
+          <!--<p class="service-eng justify-content">Customer service</p>-->
+          <!--<h3 class="phone justify-content">400-800-8000</h3>-->
+          <!--<p class="desc justify-content">全天24小时人工服务线</p>-->
+        <!--</div>-->
+      </div>
+    </div>
+    <div class="release">
+      <div class="r1" @click="releaseDemandEvent">
+        <em />
+        <span>发布需求</span>
+      </div>
+      <div class="r2">
+        <em />
+        <span>售后服务</span>
+      </div>
+    </div>
+    <Foot />
+  </div>
+</template>
+
+<script>
+  import Head from "@/views/comment/head.vue";
+  import Foot from "@/views/comment/foot.vue";
+  import { skillDetail,robotDetail } from './../../api/detail';
+  import { allDownLoad } from '@/utils/index';
+  import {
+    download,
+    robotDownload,
+  } from '@/api/index.js';
+
+  import DiaLog from '@/views/comment/dialog.vue';
+  import RobotDiaLog from '@/views/comment/robotDiaLog.vue';
+
+  export default {
+    name: "Detail",
+    props: {
+      msg: String
+    },
+    components: {
+      Head,
+      Foot,
+      DiaLog,
+      RobotDiaLog,
+    },
+    mounted() {
+//      if( this.$route.params && this.$route.params.flag === "skill" ) {
+//        this.skillDetailData();
+//        this.runInv();
+//      }
+//      if( this.$route.params && this.$route.params.flag === "robot" ) {
+//        this.robotDetailData();
+//        this.runInv();
+//      }
+
+      //从技能列表页跳转到详情页
+      if(this.$route.query && this.$route.query.flag === 'skill') {
+        this.skillDetailData();
+        this.runInv();
+      }
+      //从机器人列表跳转到详情页
+      if(this.$route.query && this.$route.query.flag === 'robot') {
+        this.robotDetailData();
+        this.runInv();
+      }
+    },
+    data() {
+      return {
+        timer: '',
+        skillId: '',
+        robotId: '',
+        bannerSMItem:'banner-samll-item',
+        bannerActive: 'bannerActive',
+        currentIndex: 0, //默认显示图片
+        instructionsData: [
+          {
+            content: '主要通过指定目录下的发票图片来自动识别相关信息，并生成结果文件。',
+          },
+          {
+            content: '主要通过指定目录下的发票图片来自动识别相关信息，并生成结果文件。',
+          },
+          {
+            content: '主要通过指定目录下的发票图片来自动识别相关信息，并生成结果文件。',
+          },
+          {
+            content: '主要通过指定目录下的发票图片来自动识别相关信息，并生成结果文件。',
+          },
+        ],
+        extendList: [],
+        detailData: [],
+        bannerList: [
+          { src: require("./../../assets/index/banner.jpg") },
+          { src: require("./../../assets/index/banner.jpg") },
+          { src: require("./../../assets/index/banner.jpg") },
+        ],
+        picList: [],
+        picList:[
+          {
+            isBannerActive: true,
+            picUrl:'http://img.hb.aicdn.com/adbde61e4343dedd21e97ea7f22666825a8db7d077ffe-qn8Pjn_fw658',
+            thmnailUrl: 'http://img.hb.aicdn.com/adbde61e4343dedd21e97ea7f22666825a8db7d077ffe-qn8Pjn_fw658'
+          },
+          {
+            isBannerActive: false,
+            picUrl:'http://img.hb.aicdn.com/adeed7d28df6e776c2fa6032579c697381d1a82b7fe00-fwRqgn_fw658',
+            thmnailUrl: 'http://img.hb.aicdn.com/adeed7d28df6e776c2fa6032579c697381d1a82b7fe00-fwRqgn_fw658'
+          },
+          {
+            isBannerActive: false,
+            picUrl:'http://img.hb.aicdn.com/ab7f48509b3c0353017d9a85ef1d12400c9b2724540d4-p3zouo_fw658',
+            thmnailUrl: 'http://img.hb.aicdn.com/ab7f48509b3c0353017d9a85ef1d12400c9b2724540d4-p3zouo_fw658'
+          },
+          {
+            isBannerActive: false,
+            picUrl:'http://img.hb.aicdn.com/60f788fc2a846192f224b9e6d4904b30e54926211d3d67-ACFJ9G_fw658',
+            thmnailUrl: 'http://img.hb.aicdn.com/60f788fc2a846192f224b9e6d4904b30e54926211d3d67-ACFJ9G_fw658'
+          },
+          {
+            isBannerActive: false,
+            picUrl:'http://img.hb.aicdn.com/22ded455284aab361b8d2056e82f74a891a019704296a-PSraEB_fw658',
+            thmnailUrl: 'http://img.hb.aicdn.com/22ded455284aab361b8d2056e82f74a891a019704296a-PSraEB_fw658'
+          },
+        ],
+        useCount: 5,
+        //使用说明
+        extendListContent: '',
+        //典型客户
+        typicalCustomerHtml: '',
+        customerImgList: [
+          { src: require("@/assets/index/banner.jpg") },
+          { src: require("@/assets/index/banner.jpg") },
+          { src: require("@/assets/index/banner.jpg") },
+        ],
+        //客户服务
+        customerServiceHtml: '',
+        //机器人和技能的下载
+        skillDiaVisData: false,
+        robotDiaVisData: false,
+        title: '下载提示',
+        robotTitle: '机器人信息',
+        robotName: '',
+        robotCode: '',
+        skillItem: {},
+
+        nameTitle: '',
+        codeTitle: '',
+        robotTitle:'',
+      }
+    },
+    destroyed() {
+      console.log('destroyed',this.timer);
+      clearInterval(this.timer);
+    },
+    methods: {
+      skillDetailData() {
+        let skillId = this.$route.query.bid;
+        skillDetail(skillId).then(res=>{
+          console.log('skillDetail',res);
+          this.detailData = res;
+          this.extendList = res.extendList;
+          this.extendListContent = res.extendList && res.extendList[0] && res.extendList[0].content;
+          this.typicalCustomerHtml = res.extendList && res.extendList[1] && res.extendList[1].content;
+          this.customerServiceHtml = res.extendList && res.extendList[2] && res.extendList[2].content;
+
+          if(res.picList.length > 0) {
+            this.picList = res.picList;
+          }else {
+            console.log('clearInterval');
+            clearInterval(this.timer);
+          }
+        })
+      },
+      robotDetailData() {
+        let robotId = this.$route.query.bid;
+        robotDetail(robotId).then(res=>{
+          console.log('robotDetail',res);
+          this.detailData = res;
+          this.extendList = res.extendList;
+          this.extendListContent = res.extendList && res.extendList[0] && res.extendList[0].content;
+          this.typicalCustomerHtml = res.extendList && res.extendList[1] && res.extendList[1].content;
+          this.customerServiceHtml = res.extendList && res.extendList[2] && res.extendList[2].content;
+          //如果有图片列表的话，就赋值，否则清除定时器
+          if(res.picList.length > 0) {
+            this.picList = res.picList;
+          }else {
+            clearInterval(this.timer);
+          }
+        })
+      },
+      smallItemEvent(smallItem,value) {
+        console.log('smallItemEvent',value);
+        console.log('smallItem',smallItem);
+        this.currentIndex = value;
+      },
+      //定时轮播
+      runInv() {
+        this.timer = setInterval(() => {
+          if(this.currentIndex === this.picList.length - 1) {
+            this.currentIndex = -1;
+            this.$refs.bannelSmall.scrollTop = 0;
+          }
+          this.currentIndex = this.currentIndex + 1;
+          //如果自动轮播到第4张图片时，给overflow的盒子加scrollTop属性，为了解决轮播选中的效果到了隐藏的区域
+          if(this.currentIndex > 2) {
+            this.$refs.bannelSmall.scrollTop += 96;
+          }
+        }, 2000)
+      },
+      //点击发布需求跳转到对应的页面
+      releaseDemandEvent() {
+        console.log('releaseDemandEvent');
+        this.$router.push({
+          name: 'Demand',
+          query: {
+            flag: 'detail'
+          }
+        })
+      },
+      //下载
+      downEvent(item) {
+        let url = window.location.hash;
+        sessionStorage.setItem("url",url);
+        //技能下载
+        if( this.$route.query && this.$route.query.flag === "skill" ) {
+          this.skillDiaVisData = true;
+          this.skillItem = item;
+        }
+        //机器人下载
+        if( this.$route.query && this.$route.query.flag === "robot" ) {
+          this.robotDownLoadFun(item);
+        }
+      },
+      //技能下载
+      skillDownLoadFun(item) {
+        let data = {
+          orderName: item.name,
+          commodityId: item.bid,
+          type: 1, //技能下载 type =1
+        }
+        download(data).then(res=>{
+          //console.log('robotDownload',res);
+          //this.downLoadFun(res.downloadUrl);
+          if(res.code === 10010) {
+            this.$message({
+              type: 'warning',
+              message: res.message,
+            })
+            this.$router.push('/login');
+          }else {
+            //this.forbidden = true;
+            item.downCount = 1;
+            this.robotName = res.name;
+            this.robotCode = res.registerCode;
+            this.robotDiaVisData = true;
+            this.robotTitle = '技能信息';
+            this.nameTitle = '技能装配的机器人名称';
+            this.codeTitle = '技能装配的机器人关联码';
+          }
+        })
+      },
+      //机器人下载
+      robotDownLoadFun(item) {
+        let data = {
+          orderName: item.name,
+          commodityId: item.bid,
+          type: 2, //机器人下载 type =2
+        }
+        robotDownload(data).then(res=>{
+          //console.log('robotDownload',res);
+          item.downCount = 1;
+          if(res.code === 10010) {
+            this.$message({
+              type: 'warning',
+              message: res.message,
+            })
+            this.$router.push('/login');
+          }else {
+            this.robotName = res.name;
+            this.robotCode = res.registerCode;
+            this.robotDiaVisData = true;
+            this.robotTitle = '机器人信息';
+            this.nameTitle = '创建的机器人名称';
+            this.codeTitle = '创建的机器人关联码';
+            allDownLoad(res.downloadUrl);
+            //this.forbidden = true;
+          }
+        })
+      },
+      //技能-确定
+      parentSkillYesEvent(value) {
+        this.skillDownLoadFun(value);
+        this.skillDiaVisData = false;
+      },
+      //技能-取消
+      parentSkillNoEvent(value) {
+        if(value === 'skillNo') {
+          console.log('skillNo');
+          this.skillDiaVisData = false;
+        }
+      },
+      //点击关闭按钮，关闭对话框
+      beforeCloseEvent(value) {
+        if(value === 'close') {
+          this.skillDiaVisData = false;
+        }
+      },
+      //关闭
+      closeEvent(value) {
+        if(value === 'robotClose') {
+          this.robotDiaVisData = false;
+        }
+      },
+      //点击右上角叉号 关闭弹窗
+      robotBeforeCloseEvent(value) {
+        if(value === 'rightRobotClose') {
+          this.robotDiaVisData = false;
+        }
+      },
+    }
+  }
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style lang="scss">
+  .instructions {
+    width: 100%;
+    padding: 30px 100px;
+    margin-top: 156px;
+    box-sizing: border-box;
+    .blue-color {
+      color: #3969E7;
+    };
+    .instru-content {
+      width: 1000px;
+      padding: 0 100px;
+      .use {
+        font-size: 36px;
+      }
+      .use-eng {
+        margin-top: 13px;
+        font-size: 18px;
+      }
+      .fun-desc {
+        padding: 30px 0;
+        .desc-up {
+          .up {
+            display: flex;
+            .func-img {
+              width: 51px;
+              height: 49px;
+              background: url(./../../assets/index/icon-2.png) -12px 270px;
+            }
+            .func-desc {
+              width: 100%;
+              height: 48px;
+              line-height: 48px;
+              font-size: 18px;
+              margin-left: 32.5px;
+            }
+
+            .opt-img {
+              width: 57px;
+              height: 49px;
+              background: url(./../../assets/index/icon-2.png) -84px 270px;
+            }
+            .opt-desc {
+              width: 100%;
+              height: 48px;
+              line-height: 48px;
+              font-size: 18px;
+              margin-left: 32.5px;
+            }
+
+            .mark-img {
+              width: 57px;
+              height: 49px;
+              background: url(./../../assets/index/icon-2.png) -168px 270px;
+            }
+            .mark-desc {
+              width: 100%;
+              height: 48px;
+              line-height: 48px;
+              font-size: 18px;
+              margin-left: 32.5px;
+            }
+
+            .params-img {
+              width: 57px;
+              height: 49px;
+              background: url(./../../assets/index/icon-2.png) -13px 213px;
+            }
+            .params-desc {
+              width: 100%;
+              height: 48px;
+              line-height: 48px;
+              font-size: 18px;
+              margin-left: 32.5px;
+            }
+          }
+        }
+        .desc-down {
+          padding-left: 80px;
+          .instru-item {
+            font-size: 12px;
+            height: 18px;
+            line-height: 18px;
+          }
+        }
+      }
+      .line {
+        width: 100%;
+        height: 1px;
+        background: #eee;
+      }
+      .banner-img {
+        width: 100%;
+        padding-top: 20px;
+        img {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+  }
+  .serves {
+    width: 100%;
+    background: url("./../../assets/index/service.png") no-repeat center;
+    .serves-content {
+      width: 1000px;
+      margin: 20px 0;
+      .after-service {
+        font-size: 36px;
+        color: #52545A;
+      }
+      .service-eng {
+        font-size: 18px;
+        color: #C1BABB;
+        margin-top: 20px;
+      }
+      .phone {
+        color: #52545A;
+        font-size: 44px;
+        margin-top: 50px;
+      }
+      .desc {
+        font-size: 14px;
+        color: #52545A;
+        margin-top: 26px;
+      }
+    }
+  }
+  .customer {
+    width: 100%;
+    background: url("./../../assets/index/customer.png") no-repeat center;
+    .customer-content {
+      margin: 94px 0 111px 0;
+      width: 1000px;
+      .typical-customer {
+        font-size: 36px;
+      }
+      .customer-eng {
+        font-size: 18px;
+        margin-top: 20px;
+      }
+      .customer-box {
+        .customer-ul {
+          margin-top: 76px;
+          .customer-item {
+            float: left;
+            width: 18%;
+            height: 108px;
+            margin: 1%;
+            background: #fff;
+            img {
+              width: 100%;
+              height: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
+</style>
+<style scoped lang="scss">
+  .detail-container {
+    ::-webkit-input-placeholder{
+      /* WebKit browsers */
+      color: #fff;
+    }
+    :-moz-placeholder{
+      /* Mozilla Firefox 4 to 18 */
+      color: #fff;
+    }
+    ::-moz-placeholder {
+      /* Mozilla Firefox 19+ */
+      color: #fff;
+    }
+    :-ms-input-placeholder {
+      /* Internet Explorer 10+ */
+      color: #fff;
+    }
+    .detail {
+      margin-top: 60px;
+      .banner {
+        width: 100%;
+        background: #eee;
+        .banner-content {
+          width: 1179px;
+          position: relative;
+          .content {
+            width: 100%;
+            height: 512px;
+            overflow: hidden;
+            .banner-ul {
+              width: 100%;
+              height: 100%;
+              .banner-item {
+                width: 100%;
+                height: 100%;
+                .banner-img {
+                  width: 100%;
+                  height: 100%;
+                }
+              }
+            }
+          }
+          .banner-samll-box {
+            width: 186px;
+            height: 400px;
+            position: absolute;
+            top: 0;
+            right: 0;
+            overflow: auto;
+            .samll-ul {
+              .bannerActive {
+                border: 2px solid #15ECFF;
+              }
+              width: 186px;
+              .banner-samll-item {
+                width: 100%;
+                height: 96px;
+                margin: 2px 0;
+                .banner-small-img {
+                  width: 100%;
+                  height: 100%;
+                }
+              }
+            }
+          }
+          .robot-info {
+            width: 1112px;
+            height: 256px;
+            padding: 29px 164px;
+            border-radius: 6px;
+            background: #3969E7;
+            position: absolute;
+            left: 34px;
+            bottom: -156px;
+            z-index: 999;
+            color: #fff;
+            .robot-title {
+              padding: 5px 0;
+              .useCount {
+                font-size: 12px;
+              }
+            }
+            .robot-desc {
+              font-size: 12px;
+              margin-top: 17px;
+            }
+            .condition {
+              margin-top: 32px;
+              font-size: 12px;
+              .release-time {
+                height: 18px;
+                line-height: 18px;
+              }
+              .use-condition {
+                height: 18px;
+                line-height: 18px;
+              }
+              .version {
+                height: 18px;
+                line-height: 18px;
+              }
+              .price-right {
+                font-size: 22px;
+                color: #D9CDA3;
+              }
+            }
+            .tags {
+              margin-top: 22px;
+            }
+          }
+        }
+      }
+      .instructions {
+        width: 100%;
+        padding: 30px 100px;
+        margin-top: 156px;
+        box-sizing: border-box;
+        .blue-color {
+          color: #3969E7;
+        };
+        .instru-content {
+          width: 1000px;
+          padding: 0 100px;
+          .use {
+            font-size: 36px;
+          }
+          .use-eng {
+            margin-top: 13px;
+            font-size: 18px;
+          }
+          .fun-desc {
+            padding: 30px 0;
+            .desc-up {
+              .up {
+                display: flex;
+                .func-img {
+                  width: 51px;
+                  height: 49px;
+                  background: url(./../../assets/index/icon-2.png) -12px 234px;
+                }
+                .func-desc {
+                  width: 100%;
+                  height: 48px;
+                  line-height: 48px;
+                  font-size: 18px;
+                  margin-left: 32.5px;
+                }
+
+                .opt-img {
+                  width: 57px;
+                  height: 49px;
+                  background: url(./../../assets/index/icon-2.png) -84px 230px;
+                }
+                .opt-desc {
+                  width: 100%;
+                  height: 48px;
+                  line-height: 48px;
+                  font-size: 18px;
+                  margin-left: 32.5px;
+                }
+
+                .mark-img {
+                  width: 57px;
+                  height: 49px;
+                  background: url(./../../assets/index/icon-2.png) -168px 230px;
+                }
+                .mark-desc {
+                  width: 100%;
+                  height: 48px;
+                  line-height: 48px;
+                  font-size: 18px;
+                  margin-left: 32.5px;
+                }
+
+                .params-img {
+                  width: 57px;
+                  height: 49px;
+                  background: url(./../../assets/index/icon-2.png) -13px 175px;
+                }
+                .params-desc {
+                  width: 100%;
+                  height: 48px;
+                  line-height: 48px;
+                  font-size: 18px;
+                  margin-left: 32.5px;
+                }
+              }
+            }
+            .desc-down {
+              padding-left: 80px;
+              .instru-item {
+                font-size: 12px;
+                height: 18px;
+                line-height: 18px;
+              }
+            }
+          }
+          .line {
+            width: 100%;
+            height: 1px;
+            background: #eee;
+          }
+          .banner-img {
+            width: 100%;
+            padding-top: 20px;
+            img {
+              width: 100%;
+              height: 100%;
+            }
+          }
+        }
+      }
+
+      .customer {
+        width: 100%;
+        background: url("./../../assets/index/customer.png") no-repeat center;
+        .customer-content {
+          margin: 94px 0 111px 0;
+          width: 1000px;
+          .typical-customer {
+            font-size: 36px;
+          }
+          .customer-eng {
+            font-size: 18px;
+            margin-top: 20px;
+          }
+          .customer-box {
+            .customer-ul {
+              margin-top: 76px;
+              .customer-item {
+                float: left;
+                width: 18%;
+                height: 108px;
+                margin: 1%;
+                background: #fff;
+                img {
+                  width: 100%;
+                  height: 100%;
+                }
+              }
+            }
+          }
+        }
+      }
+      .serves {
+        width: 100%;
+        background: url("./../../assets/index/service.png") no-repeat center;
+        .serves-content {
+          width: 1000px;
+          .after-service {
+            font-size: 36px;
+            color: #52545A;
+          }
+          .service-eng {
+            font-size: 18px;
+            color: #C1BABB;
+            margin-top: 20px;
+          }
+          .phone {
+            color: #52545A;
+            font-size: 44px;
+            margin-top: 50px;
+          }
+          .desc {
+            font-size: 14px;
+            color: #52545A;
+            margin-top: 26px;
+          }
+        }
+      }
+    }
+    .release {
+      width: 50px;
+      font-size: 12px;
+      font-weight: 400;
+      width: 88px;
+      height: 188px;
+      background: rgba(255, 255, 255, 1);
+      border: 1px solid rgba(223, 223, 223, 1);
+      box-shadow: 0px 0px 6px 0px rgba(121, 121, 121, 0.47);
+      color: rgba(109, 109, 111, 1);
+      border-radius: 6px; position: fixed; top: 300px; right:80px; z-index: 1000;
+      span{
+        margin-top: 14px; line-height: 30px
+      }
+      .r1 {
+        width: 50px;
+        margin: 0px auto; height: 110px;
+        font-size: 12px; padding-top: 31px
+      }
+
+      .r1 em {
+        background: url(./../../assets/index/icon-1.png) -148px -7px;
+        width: 28px;
+        height: 28px;
+        display: block;margin: 0px auto;
+      }
+      .r1 em:hover {
+        background-position: -148px -47px;
+      }
+
+      .r2 {
+        width: 50px;
+        margin: 0px auto;
+        font-size: 12px;
+      }
+
+      .r2 em {
+        background: url(./../../assets/index/icon-1.png) -183px -7px;
+        width: 28px;
+        height: 28px;margin: 0px auto;
+        display: block;
+
+      }
+      .r2 em:hover {
+        background-position: -183px -47px;
+      }
+    }
+  }
+</style>

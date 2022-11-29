@@ -1,0 +1,335 @@
+<template>
+  <div class="banner-container">
+    <el-carousel id="bannercontent" trigger="click" height="524px" arrow="hover" :loop="false">
+      <el-carousel-item v-for="item in bannerdata">
+        <a :href="item.linkUrl?item.linkUrl:'javascript:;'">
+          <div class="banner" :style="{backgroundImage:'url(' + item.picUrl + ')'}">
+            <div class="banner-box">
+            </div>
+            <div class="banner-text">
+              <div class="banner-title" v-if="item.id === 3">智能抗疫</div>
+              <p class="banner-desc" v-if="item.id === 3">从你的RPA助手开始</p>
+              <div class="banner-title" v-if="item.id === 5">获取默认机器人</div>
+              <p class="banner-desc" v-if="item.id === 5">下载默认机器人安装包</p>
+              <!--v-if="item.relationId"-->
+              <div
+                v-if="item.relationId"
+                class="button"
+                @click.prevent="skillDownEvent(item)"
+              >下载</div>
+            </div>
+          </div>
+        </a>
+      </el-carousel-item>
+      <DiaLog
+        :title="title"
+        :skillItem = "skillItem"
+        :skillDiaVis="skillDiaVisData"
+        @confirm="parentSkillYesEvent"
+        @no="parentSkillNoEvent"
+        @beforeClose="beforeCloseEvent"
+      />
+      <RobotDiaLog
+        :nameTitle="nameTitle"
+        :codeTitle="codeTitle"
+        :robotTitle="robotTitle"
+        :robotName="robotName"
+        :robotCode="robotCode"
+        :robotDiaVis="robotDiaVisData"
+        @close="closeEvent"
+        @robotBeforeClose="robotBeforeCloseEvent"
+      />
+    </el-carousel>
+  </div>
+</template>
+
+<script>
+import { carousellist, robotDownload, download } from "@/api/index.js";
+import { allDownLoad } from "@/utils/index";
+import DiaLog from '@/views/comment/dialog.vue';
+import RobotDiaLog from '@/views/comment/robotDiaLog.vue';
+
+export default {
+  name: "Banner",
+  components: {
+    DiaLog,
+    RobotDiaLog,
+  },
+  data() {
+    return {
+      bannerdata: [],
+      bannerdata1: [{
+        id: 3,
+        picUrl: require("@/assets/index/banner2.png")
+      },{
+        id: 5,
+        picUrl: require("@/assets/index/banner1.png")
+      }],
+      skillImgArray: [
+        require("@/assets/index/skill1.png"),
+        require("@/assets/index/skill1.png"),
+        require("@/assets/index/skill1.png"),
+        require("@/assets/index/skill1.png")
+      ],
+      robotImgArray: [
+        require("@/assets/index/shuju.png"),
+        require("@/assets/index/kefu.png"),
+        require("@/assets/index/jianguan.png")
+      ],
+      skillDiaVisData: false,
+      robotDiaVisData: false,
+      title: '下载提示',
+      robotTitle: '',
+      nameTitle: '',
+      skillItem: {},
+      codeTitle: '',
+      robotName: '',
+      robotCode: '',
+    };
+  },
+  mounted() {
+    this.initData();
+  },
+  methods: {
+    initData() {
+      const self = this;
+      carousellist()
+        .then(res => {
+          self.bannerdata = res;
+          console.log(self.data);
+          // self.data.map((item, index) => {
+          //   item.imgSrc = self.skillImgArray[index];
+          // });
+        })
+        .catch(e => {
+          console.log(e);
+        });
+    },
+    //机器人和技能的下载
+    skillDownEvent(item) {
+//      const data = {
+//        commodityId: item.relationId,
+//        type: item.type,
+//        isDefault: item.isDefault
+//      };
+      if (item.type === 2) {
+        //机器人下载
+        // 1-技能  2-机器人
+        this.robotDownLoadFun(item);
+        //this.skillDiaVisData = true;
+        /*
+        robotDownload(data).then(res => {
+          if (res.code === 10010) {
+            this.$message({
+              type: "warning",
+              message: res.message
+            });
+            this.$router.push("/login");
+            return false;
+          } else {
+            //debugger;
+            res.downloadUrl ? allDownLoad(res.downloadUrl) : "";
+          }
+        });
+        */
+      } else {
+        //技能下载
+        this.skillDiaVisData = true;
+        this.skillItem = item;
+        /*
+        download(data).then(res => {
+          if (res.code === 10010) {
+            this.$message({
+              type: "warning",
+              message: res.message
+            });
+            this.$router.push("/login");
+          } else {
+            this.$message({
+              type: "success",
+              message: res
+            });
+          }
+        });
+        */
+      }
+    },
+
+    //于2020-02-06 新添加的代码
+    //首页轮播图下载
+    //技能-确定
+    parentSkillYesEvent(value) {
+      console.log('parentSkillYesEvent---',value);
+      this.skillDownLoadFun(value);
+      this.skillDiaVisData = false;
+    },
+    //技能-取消
+    parentSkillNoEvent(value) {
+      if(value === 'skillNo') {
+        console.log('skillNo');
+        this.skillDiaVisData = false;
+      }
+    },
+    //点击关闭按钮，关闭对话框
+    beforeCloseEvent(value) {
+      if(value === 'close') {
+        this.skillDiaVisData = false;
+      }
+    },
+    //机器人模块
+    closeEvent(value) {
+      if(value === 'robotClose') {
+        this.robotDiaVisData = false;
+      }
+    },
+    //点击右上角叉号 关闭弹窗
+    robotBeforeCloseEvent(value) {
+      if(value === 'rightRobotClose') {
+        this.robotDiaVisData = false;
+      }
+    },
+
+    /**********start**********/
+    //调用技能下载的接口
+    skillDownLoadFun(value) {
+      console.log('skillDownLoadFun',value);
+      const data = {
+        commodityId: value.relationId,
+        type: value.type, // 技能下载 type =1
+        //isDefault: value.isDefault
+      }
+
+      download(data).then(res => {
+        console.log('robotDownload', res)
+        if (res.code === 10010) {
+          this.$message({
+            type: 'warning',
+            message: res.message
+          })
+          this.$router.push('/login')
+        } else {
+          this.robotName = res.name;
+          this.robotCode = res.registerCode;
+          this.robotDiaVisData = true;
+          this.robotTitle = '技能信息';
+          this.nameTitle = '技能装配的机器人名称';
+          this.codeTitle = '技能装配的机器人关联码';
+        }
+      })
+    },
+    //调用机器人下载的接口
+    robotDownLoadFun(item) {
+      const data = {
+        commodityId: item.relationId,
+        type: item.type, // 机器人下载 type =2
+        isDefault: item.isDefault
+      }
+      robotDownload(data).then(res => {
+        console.log('robotDownload', res)
+        // this.downLoadFun(res.downloadUrl);
+        if (res.code === 10010) {
+          this.$message({
+            type: 'warning',
+            message: res.message
+          })
+          this.$router.push('/login');
+        } else {
+          this.robotName = res.name;
+          this.robotCode = res.registerCode;
+          this.robotDiaVisData = true;
+          this.robotTitle = '机器人信息';
+          this.nameTitle = '创建的机器人名称';
+          this.codeTitle = '创建的机器人关联码';
+          allDownLoad(res.downloadUrl);
+        }
+      })
+    },
+    /**********end**********/
+  }
+};
+</script>
+
+<style scoped lang="scss">
+.banner-container {
+  width:100%;
+  height: 524px;
+  position: relative;
+  background: #23459E;
+  .banner {
+    //background: url(http://192.168.191.1/img/fudaolaiTest.jpg) center;
+    //background-size: contain;
+    background-size: 100% 100%;
+    //height: 486px;
+    //width: 100%;
+    display: block;
+    //add
+    height: 466px;
+    width: 1200px;
+    margin: 0 auto;
+    margin-top: 60px;
+    .banner-box {
+      width: 1180px;
+      margin: 0px auto;
+      position: relative;
+      .button {
+        width: 160px;
+        height: 40px;
+        background: #2a5ad7;
+        font-size: 14px;
+        color: #fff;
+        display: inline-block;
+        line-height: 40px;
+        text-align: center;
+        border-radius: 6px;
+        position: absolute;
+        top: 380px;
+        cursor: pointer;
+      }
+      .button:hover {
+        background: #356dff;
+      }
+    }
+  }
+  .banner-text {
+    position: absolute;
+    color: #fff;
+    width: 1180px;
+    margin: 0px auto;
+    position: relative;
+    .banner-title {
+      font-size: 38px;
+      padding-top: 147px;
+    }
+    .banner-desc {
+      font-size: 18px;
+      margin-top: 20px;
+    }
+    .button {
+      width: 160px;
+      height: 40px;
+      background: #2a5ad7;
+      font-size: 14px;
+      color: #fff;
+      display: inline-block;
+      line-height: 40px;
+      text-align: center;
+      border-radius: 6px;
+      //position: absolute;
+      //top: 380px;
+      cursor: pointer;
+      margin-top: 51px;
+    }
+    .button:hover {
+      background: #356dff;
+    }
+  }
+}
+
+#bannercontent .el-carousel__indicators--outside {
+  position: absolute;
+  bottom: 100px;
+  z-index: 50000;
+  display: none;
+}
+</style>
+

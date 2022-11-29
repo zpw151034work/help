@@ -1,0 +1,24 @@
+/**
+ * Created by mapbar_front on 2020/1/5.
+ */
+import request from '@/utils/request'
+
+//搜索列表
+export function searchList(data) {
+  return request({
+    url: 'market/skillMarket/getMsRsSkillRobotList',
+    method: 'post',
+    data,
+  })
+}
+
+//得到所有的标签
+//form表单的请求方式
+export function getTag(params) {
+  return request({
+    url: 'market/robotMarket/getTag',
+    method: 'post',
+    params,
+  })
+}
+

@@ -1,0 +1,229 @@
+<template>
+  <div class="head">
+    <div class="head-box">
+      <div class="logo">
+        <router-link to="/">
+          <img src="./../../assets/index/logo.png">
+        </router-link>
+      </div>
+      <div class="search-box">
+        <div class="search-input">
+          <input style="color:#fff" v-model.trim="searchName" type="text" placeholder="请输入您需要的机器人或技能">
+          <span class="search-button" @click="searchEvent" />
+        </div>
+        <div class="search-right">
+          <span class="a40" @click="loadRpa()">管理控制台</span>
+          <el-dropdown v-if="loginStatus" trigger="click">
+            <span class="el-dropdown-link load-box">
+              {{ name }}
+              <i class="el-icon-arrow-down el-icon--right" />
+            </span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item>
+                <span style="display:block;" @click="modityPswEvent">修改密码</span>
+              </el-dropdown-item>
+              <el-dropdown-item>
+                <span style="display:block;" @click="logoutEvent">退出登录</span>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+
+          <span v-else class="load-box">
+            <a class="load" @click="loginEvent">登录</a>|
+            <!--<router-link to="/register" class="load">注册</router-link>-->
+            <a class="load" @click="registerEvent">注册</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import ElInput from '../../../node_modules/element-ui/packages/input/src/input'
+import { mapGetters } from 'vuex'
+import { loginout } from './../../api/index'
+import { loginRPA } from '@/api/user'
+import eventBus from "@/utils/eventBus";
+
+export default {
+  name: 'Head',
+  components: { ElInput },
+  props: {
+    msg: String
+  },
+  computed: {
+    ...mapGetters(['sidebar', 'avatar']),
+//    name() {
+//      //修改: return sessionStorage.getItem('userName')
+//      return localStorage.getItem('userName')
+//    }
+  },
+  data() {
+    return {
+      name: localStorage.getItem('userName'),
+      searchName: '',
+      loginStatus: false
+    }
+  },
+  mounted() {
+    //console.log('window.location.hash', window.location.hash)
+    //修改 sessionStorage.getItem('userName')
+    if (localStorage.getItem('userName') && localStorage.getItem('userName') !=="undefined" ) {
+      this.loginStatus = true
+      // this.name = sessionStorage.getItem("userName");
+    }
+    //监听登录成功之后的用户名
+    eventBus.$on('namerouter',(item)=>{
+      this.name = item.username;
+    })
+  },
+  methods: {
+    searchEvent() {
+      // if(this.searchName){
+
+      // }
+      this.$emit('search', this.searchName)
+      this.$router.push({ path: '/search' })
+    },
+    logoutEvent() {
+      console.log('this.name', this.name)
+      loginout().then(res => {
+        console.log('loginout', res)
+        this.loginStatus = false
+        //修改：sessionStorage.setItem('userName', '');
+        localStorage.removeItem('userName');
+        //退出成功之后，清空存在sessionStorage中的值phone和enterpriseName
+        //sessionStorage.setItem('phone',"");
+        //sessionStorage.setItem('enterpriseName',"");
+        localStorage.removeItem('phone');
+        localStorage.removeItem('enterpriseName')
+        //修改：sessionStorage.setItem('password', '')
+        localStorage.removeItem('password');
+        sessionStorage.setItem('palt', '')
+        this.$message({
+          type: 'success',
+          message: res
+        })
+      })
+    },
+    // 点击注册按钮
+    registerEvent() {
+      const url = window.location.hash
+      sessionStorage.setItem('url', url)
+      this.$router.push({ path: '/register' })
+    },
+    // 登录
+    loginEvent() {
+      const url = window.location.hash
+      sessionStorage.setItem('url', url)
+      this.$router.push({ path: '/login' })
+    },
+    loadRpa() {
+      //修改：sessionStorage.getItem('userName') && sessionStorage.getItem('password')
+      if (localStorage.getItem('userName') && localStorage.getItem('password')) {
+        window.location.href = 'http://139.129.164.252:9530/plat/#/login?redirect=%2F'
+        sessionStorage.setItem('plat', true)
+      } else {
+        this.$message({
+          showClose: true,
+          message: '您未登录，请先去登录',
+          type: 'warning'
+        })
+        return false
+      }
+    },
+    //修改密码
+    modityPswEvent() {
+      this.$router.push('/modifyPsw');
+    }
+  }
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped lang="scss">
+.head {
+  //background: #000000;
+  background: #3654D1;
+  height: 60px;
+  width: 100%; overflow: hidden;
+  display: block;
+  position: absolute;
+  top: 0;
+  left:0;
+  z-index: 999;
+  .head-box {
+    width: 1180px;
+    margin: 0px auto;
+    .logo {
+      width: 120px;
+      float: left;
+      height: 60px;
+      line-height: 60px;
+    }
+    .logo img {
+      margin-top: 11px;
+    }
+  }
+}
+
+.search-box {
+  height: 60px;
+  color: #fff;
+  line-height: 60px;
+  float: right;
+  .search-input,
+  .search-right {
+    display: inline;
+  }
+  .search-input {
+    width: 435px;
+    height: 30px;
+    background:rgba(255, 255, 255,0.3);
+    border-radius: 6px;
+    position: relative;
+    margin-top: 15px;
+    float: left;
+    margin-right: 30px;
+    input {
+      border: 0px;
+      width: 400px;
+      font-size: 14px;
+      position: absolute;
+      top: 0px;
+      height: 30px; padding-left: 24px;
+      left: 5px;
+      outline: none; background: transparent;
+    }
+    .search-button {
+      background: url(./../../assets/index/icon-2.png)  0px -5px;
+      width: 40px;
+      height: 30px;
+      position: absolute;
+      top: 0px;
+      right: 0px;
+    }
+    .search-button:hover {
+      background: url(./../../assets/index/icon-2.png)  0px -47px;
+      width: 40px;
+      height: 30px;
+      position: absolute;
+      top: 0px;
+      right: 0px; cursor: pointer;
+    }
+  }
+  .load-box {
+    opacity: 0.5;
+    color: #fff;
+  }
+
+  .a40 {
+    margin-right: 40px;
+  }
+  a {
+    color: #fff;
+    font-size: 14px;
+  }
+}
+</style>

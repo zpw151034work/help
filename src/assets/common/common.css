@@ -1,0 +1,167 @@
+.container {
+  height: calc(100vh - 150px);
+  overflow: scroll;
+  padding-bottom: 30px;
+}
+
+.box {
+  padding: 0 80px;
+  height: 100%;
+}
+
+.box .title .name {
+  font-size: 24px;
+  color: #282828;
+  height: 60px;
+}
+
+.box .title .time {
+  color: #9e9e9e;
+  font-size: 12px;
+  height: 22px;
+}
+
+.box .title .introduce {
+  font-family: PingFang-SC-Medium;
+  font-size: 14px;
+  color: #282828;
+  line-height: 20px;
+}
+
+.box .scroll-content {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.box .scroll-content .scroll-item {
+  font-size: 12px;
+  line-height: 30px;
+}
+
+.box .scroll-content .scroll-item .tit {
+  font-family: PingFang-SC-Medium;
+  font-size: 14px;
+  color: #282828;
+  align-items: flex-start;
+  font-weight: bold;
+  height: 40px;
+  line-height: 40px;
+}
+
+.box .next {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.box .next .fl {
+  display: flex;
+  flex-direction: row;
+}
+
+.box .next .rg {
+  display: flex;
+  flex-direction: row;
+}
+
+.box .next .nextTo {
+  font-family: PingFang-SC-Medium;
+  font-size: 12px;
+  color: #9e9e9e;
+  margin-right: 6px;
+}
+
+.box .next .function {
+  font-family: PingFang-SC-Medium;
+  font-size: 12px;
+  color: #282828;
+}
+
+.pageGuide {
+  padding: 0 16px;
+  position: fixed;
+}
+
+.pageGuide .tit {
+  height: 50px;
+  line-height: 50px;
+  font-family: PingFang-SC-Medium;
+  font-size: 14px;
+  color: #282828;
+}
+
+.pageGuide .item {
+  font-family: PingFang-SC-Medium;
+  font-size: 14px;
+  color: #626262;
+  padding: 8px 0;
+}
+
+@media screen and (max-width: 768px) {
+  .box {
+    width: 100%;
+    height: 100%;
+    padding: 0 0;
+  }
+  .box .title {
+    width: 100%;
+  }
+  .box .title .name {
+    font-size: 24px;
+    color: #282828;
+    height: 60px;
+    line-height: 60px;
+    width: 100%;
+  }
+  .box .title .time {
+    color: #9e9e9e;
+    font-size: 12px;
+    height: 22px;
+    line-height: 22px;
+  }
+  .box .title .introduce {
+    font-family: PingFang-SC-Medium;
+    font-size: 14px;
+    color: #282828;
+    line-height: 20px;
+  }
+}
+
+::-webkit-scrollbar {
+  display: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::v-deep.customer-tab {
+  width: 100%;
+  height: 50px;
+  background-color: #f5f7fa;
+  padding: 4px;
+}
+
+::v-deep.el-tabs--card > .el-tabs__header {
+  border-bottom: none;
+  margin: 0;
+}
+
+::v-deep.el-tabs--card > .el-tabs__header .el-tabs__nav {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  border: none;
+}
+
+::v-deep.el-tabs--card > .el-tabs__header .el-tabs__nav .el-tabs__item {
+  width: 25%;
+  text-align: center;
+  border: none;
+}
+
+::v-deep.el-tabs--card > .el-tabs__header .el-tabs__nav .is-active {
+  border-radius: 4px;
+  background-color: #005BD9;
+  color: #fff;
+}

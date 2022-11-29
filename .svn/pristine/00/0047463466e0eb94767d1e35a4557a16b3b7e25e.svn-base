@@ -1,0 +1,122 @@
+<!--forgetPsw.vue-->
+<template>
+  <div class="modify-psw-container">
+    <HeadLogin :load="false" />
+    <div class="public-container center">
+      <el-form size="medium" class="modify-form" :model="form" :rules="rules" ref="form">
+        <h1 class="modify-psw center">修改密码</h1>
+        <el-form-item prop="oldpassword">
+          <el-input type="password" show-password v-model="form.oldpassword" autocomplete="off" placeholder="旧密码"></el-input>
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-input type="password" show-password v-model="form.password" autocomplete="off" placeholder="新密码"></el-input>
+        </el-form-item>
+        <el-form-item prop="password2">
+          <el-input type="password" show-password v-model="form.password2" autocomplete="off" placeholder="确认新密码"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button style="width: 100%" type="primary" @click="submitForm('form')">确认</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+  </div>
+</template>
+
+<script>
+  import HeadLogin from '@/views/comment/headlogin';
+  import { modifyPassword } from '@/api/login';
+  export default {
+    name: 'modifyPsw',
+    components: {
+      HeadLogin
+    },
+    data() {
+      var validatePass = (rule, value, callback) => {
+        var pwdRegex = new RegExp('(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z]).{8,16}');
+        if (value === '') {
+          callback(new Error('请输入密码'));
+        } else if(!pwdRegex.test(value)) {
+          callback('密码中必须包含大小写字母、数字,并且8-16个字符');
+        }else {
+          if (this.form.password2 !== '') {
+            this.$refs.form.validateField('password2');
+          }
+          callback();
+        }
+      };
+      var validatePass2 = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('请再次输入密码'));
+        } else if (value !== this.form.password) {
+          callback(new Error('两次输入密码不一致!'));
+        } else {
+          callback();
+        }
+      };
+      return {
+        form: {
+          oldpassword: '',
+          password: '',
+          password2: '',
+        },
+        rules: {
+          oldpassword: [
+            { required: true, message: '请输入旧密码',},
+          ],
+          password: [
+            { validator: validatePass, trigger: 'blur' }
+          ],
+          password2: [
+            { validator: validatePass2, trigger: 'blur' }
+          ],
+        }
+      }
+    },
+    methods: {
+      //确认
+      submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            console.log('this.form',this.form);
+            this.confirm();
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      //调用接口修改密码的接口
+      confirm() {
+        let data = this.form;
+        modifyPassword(data).then(res=>{
+          //跳转到登录页面
+          this.$router.push('/login');
+        })
+      }
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+  .modify-psw-container {
+    width: 100%;
+    height: 100%;
+    background: #eee;
+    .modify-form {
+      width: 30%;
+      height: 60%;
+      .modify-psw {
+        color: #333;
+        font-size: 22px;
+        font-weight: 500;
+      }
+      .active {
+        color: #fff;
+        background: rgba(42, 90, 215, 1) !important;
+      }
+      .disabled {
+        background: #ccc !important;
+      }
+    }
+  }
+</style>

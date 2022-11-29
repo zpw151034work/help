@@ -1,0 +1,276 @@
+<!--forgetPsw.vue-->
+<template>
+  <div class="forget-psw-container">
+    <HeadLogin :load="false" />
+    <div class="public-container center">
+      <el-form size="medium" class="forget-form" :model="form" :rules="rules" ref="form">
+        <h1 class="forget-text center">忘记密码</h1>
+        <el-form-item prop="phone">
+          <el-input
+            v-model.number.trim="form.phone"
+            maxlength="11"
+            placeholder="输入注册手机号"
+            @change="phoneChange"
+          >
+
+          </el-input>
+        </el-form-item>
+        <el-form-item prop="code">
+          <el-input style="width: 60%" ref="code" maxlength="6" v-model.trim="form.code" placeholder="6位短信验证码" />
+          <el-button style="width: 30%" :class="[isActive ? activeClass : disClass]" v-if="isSendCode" :disabled="sendCodeDisabled" @click="sendCodeEvent">
+            发送验证码
+          </el-button>
+          <el-button style="width: 30%" :class="[isActive ? activeClass : disClass]" :disabled="repeatDisabled" v-if="!isSendCode">
+            重发{{ seconds }}秒
+          </el-button>
+          <div v-show="isPopup" class="popup container">
+            <div id="captcha"></div>
+            <div id="msg"></div>
+          </div>
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-input type="password" show-password v-model.trim="form.password" autocomplete="off" placeholder="新密码"></el-input>
+        </el-form-item>
+        <el-form-item prop="password2">
+          <el-input type="password" show-password v-model.trim="form.password2" autocomplete="off" placeholder="确认新密码"></el-input>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button style="width: 100%" type="primary" @click="submitForm('form')">修改</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+  </div>
+</template>
+
+<script>
+  import HeadLogin from '@/views/comment/headlogin';
+  import "../../styles/jigsaw.scss";
+  import jigsaw from '@/utils/jigsaw';
+  import { sendShortMsgCode,forgetPasswordMsodify } from '@/api/login';
+
+  export default {
+    name: 'forgetPsw',
+    components: {
+      HeadLogin
+    },
+    data() {
+      var checkPhone = (rule, value, callback) => {
+        var reg = /^1([38]\d|5[0-35-9]|7[3678])\d{8}$/;
+        if(value === "") {
+          this.isActive = false;
+          this.sendCodeDisabled = true;
+          callback(new Error('请输入手机号码'));
+        }else if (!reg.test(value)) {
+          this.isActive = false;
+          this.sendCodeDisabled = true;
+          return callback(new Error("手机号不合规"));
+        } else {
+          //秒数在0到60这个区间的时候，状态是禁止的状态
+          if(this.seconds >0 && this.seconds < 60) {
+            this.isActive = false;
+            this.sendCodeDisabled = true;
+          }else {
+            this.isActive = true;
+            this.sendCodeDisabled = false;
+          }
+          callback();
+        }
+      };
+      var validatePass = (rule, value, callback) => {
+        var pwdRegex = new RegExp('(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z]).{8,16}');
+        if (value === '') {
+          callback(new Error('请输入密码'));
+        } else if(!pwdRegex.test(value)) {
+          callback('密码中必须包含大小写字母、数字,并且8-16个字符');
+        } else {
+          if (this.form.password2 !== '') {
+            this.$refs.form.validateField('password2');
+          }
+          callback();
+        }
+      };
+      var validatePass2 = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('请再次输入密码'));
+        } else if (value !== this.form.password) {
+          callback(new Error('两次输入密码不一致!'));
+        } else {
+          callback();
+        }
+      };
+      var checkCode = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('请输入验证码'));
+        }  else {
+          callback();
+        }
+      };
+      return {
+        form: {
+          phone: '',
+          password: '',
+          password2: '',
+          code: '',
+        },
+        isActive: false,
+        activeClass: 'active',
+        disClass: 'disabled',
+        repeatDisabled: true,
+        sendCodeDisabled: true,
+        isSendCode: true,
+        seconds: 60,
+        timers: null,
+        //是否展示短信拖拽的画布
+        isPopup: false,
+        rules: {
+          phone: [
+            { validator: checkPhone, trigger: "blur"}
+          ],
+          password: [
+            { validator: validatePass, trigger: 'blur' }
+          ],
+          password2: [
+            { validator: validatePass2, trigger: 'blur' }
+          ],
+          code: [
+            { validator: checkCode, trigger: 'blur' }
+          ],
+        }
+      }
+    },
+    methods: {
+      //初始化验证码画布
+      initData() {
+        let _this = this;
+        jigsaw.init({
+          el: document.getElementById('captcha'),
+          onSuccess: function() {
+            //document.getElementById('msg').innerHTML = '登录成功！'
+            setTimeout(()=>{
+              _this.isPopup = false;
+            },500);
+            //成功之后
+            setTimeout(()=>{
+              var elem = document.getElementById('captcha');
+              //成功之后让里面的内容为""
+              elem.innerHTML = '';
+            },500);
+
+            //发送验证码成功之后seconds为60
+            _this.seconds = 60;
+            //显示和隐藏发送验证码
+            _this.isSendCode = false;
+            //1分钟倒计时
+            _this.timers = setInterval(()=>{
+              _this.seconds -= 1;
+              if(_this.seconds <= 0) {
+                clearInterval(_this.timers);
+                _this.repeatDisabled = true;
+                _this.isActive = true;
+                _this.isSendCode = true;
+                _this.seconds = 0;
+              }
+            },1000);
+            //成功之后调用短信接口
+            //发送短信，调用接口
+//            let data = {
+//              phone: _this.form.phone,
+//            };
+            const fd = new FormData();
+            fd.append('phone',_this.form.phone);
+            sendShortMsgCode(fd).then(res=> {
+              //console.log('在这里调用接口',res);
+            })
+          },
+          onFail: this.cleanMsg,
+          onRefresh: this.cleanMsg
+        }).init()
+
+      },
+      //发送验证码
+      sendCodeEvent() {
+        this.initData();
+        //验证码为false
+        //验证码置灰
+        this.isActive = false;
+        //是否弹出框
+        this.isPopup = true;
+      },
+      //修改
+      submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.modify();
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      //修改密码的事件
+      modify() {
+        let data = this.form;
+        forgetPasswordMsodify(data).then(res=>{
+          console.log(res);
+          this.$message({
+            message: res,
+            type: 'success'
+          })
+          this.$router.push('/login');
+        })
+      },
+      //手机号码失去焦点的时候
+      phoneChange(val) {
+//        if(val.length === 11) {
+//          this.isActive = true;
+//          this.sendCodeDisabled = false;
+//        }else {
+//          console.log(val);
+//          //小于11位的时候，禁止点击和置灰
+//          this.isActive = false;
+//          this.sendCodeDisabled = true;
+//        }
+      }
+    },
+    destroyed() {
+      clearInterval(this.timers);
+    },
+  }
+</script>
+
+<style lang="scss" scoped>
+  .forget-psw-container {
+    width: 100%;
+    height: 100%;
+    background: #ccc;
+    .forget-form {
+      width: 30%;
+      position: relative;
+      .forget-text {
+        color: #333;
+        font-size: 22px;
+        font-weight: 500;
+      }
+      .popup {
+        width:100%;
+        padding: 10px;
+        box-sizing: border-box;
+        background: #fff;
+        border: 1px solid #ccc;
+        position: absolute;
+        top: 0;
+        z-index: 999;
+        /*display: none;*/
+      }
+      .active {
+        color: #fff;
+        background: rgba(42, 90, 215, 1) !important;
+      }
+      .disabled {
+        color: #fff;
+        background: #ccc !important;
+      }
+    }
+  }
+</style>

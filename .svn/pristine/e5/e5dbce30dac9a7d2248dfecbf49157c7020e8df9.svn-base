@@ -1,0 +1,355 @@
+<!--需求页面-->
+<template>
+  <div class="demand-container">
+    <Head />
+    <div class="demand center">
+      <div class="demand-content">
+        <div class="title center">发布需求</div>
+        <div class="line"></div>
+        <div class="tags">
+
+        </div>
+        <div class="form">
+          <el-form :model="form" :rules="rules" ref="form" label-width="100px" class="demo-ruleForm">
+            <el-form-item label="需求标签">
+              <!--<el-tag-->
+                <!--v-for="item in items"-->
+                <!--:key="item.label"-->
+                <!--:type="item.type"-->
+                <!--effect="plain">-->
+                <!--{{ item.label }}-->
+              <!--</el-tag>-->
+              <!--<el-checkbox-group-->
+                <!--v-model="form.catalogType"-->
+              <!--&gt;-->
+                <!--<el-checkbox-->
+                  <!--v-for="item in tags"-->
+                  <!--:label="item.value"-->
+                  <!--:key="item.value"-->
+                <!--&gt;-->
+                  <!--{{ item.name }}-->
+                <!--</el-checkbox>-->
+              <!--</el-checkbox-group>-->
+
+              <el-radio-group v-model="form.catalogType">
+                <el-radio :label="item.bid" v-for="item in tags">{{ item.name }}</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="需求标题" prop="title" required>
+              <el-input
+                type="text"
+                placeholder="请输入标题（50字以内）"
+                v-model.trim="form.title"
+                maxlength="50"
+                show-word-limit
+              >
+              </el-input>
+            </el-form-item>
+            <el-form-item label="需求描述" prop="description" required>
+              <el-input
+                type="textarea"
+                placeholder="请输入需求的详情描述"
+                v-model.trim="form.description"
+                maxlength="500"
+                show-word-limit
+                resize="none"
+              >
+              </el-input>
+            </el-form-item>
+            <el-form-item label="企业名称" prop="enterpriseName" required>
+              <el-input
+                type="text"
+                placeholder="请输入企业名称"
+                v-model.trim="form.enterpriseName"
+                maxlength="50"
+                show-word-limit
+              >
+              </el-input>
+            </el-form-item>
+            <el-form-item label="联系人" prop="linkMan" required>
+              <el-input
+                type="text"
+                placeholder="请输入联系人姓名"
+                v-model.trim="form.linkMan"
+                maxlength="50"
+                show-word-limit
+              >
+              </el-input>
+            </el-form-item>
+            <el-form-item label="手机号码" style="width: 60%" prop="phone" required>
+              <el-input
+                type="text"
+                placeholder="请输入手机号码"
+                v-model.number.trim="form.phone"
+                maxlength="11"
+                show-word-limit
+              >
+              </el-input>
+            </el-form-item>
+            <el-form-item class="inline-block" label="验证码" style="width: 60%" prop="code" required>
+              <el-input
+                type="text"
+                placeholder="验证码"
+                v-model.trim="form.code"
+                maxlength="5"
+                show-word-limit
+              >
+              </el-input>
+            </el-form-item>
+
+            <div class="img-box inline-block">
+              <img :src="imgCode" @click="changeImgCode"/>
+            </div>
+            <el-form-item>
+              <el-button @click="returnEvent">取消</el-button>
+              <el-button type="primary" @click="submitForm('form')">发布需求</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import Head from "@/views/comment/head.vue";
+  import ElFormItem from "../../../node_modules/element-ui/packages/form/src/form-item";
+  import ElButton from "../../../node_modules/element-ui/packages/button/src/button";
+  import {
+    demandSave,
+    getGraphCode,
+    getTags,
+  } from './../../api/demand';
+  export default {
+    name: "Demand",
+    props: {
+      msg: String
+    },
+    components: {
+      ElButton,
+      ElFormItem,
+      Head,
+    },
+    data() {
+      var checkPhone = (rule, value, callback) => {
+        var reg = /^1([38]\d|5[0-35-9]|7[3678])\d{8}$/;
+        if (!reg.test(value)) {
+          return callback(new Error("手机号不合规"));
+        } else {
+          callback();
+        }
+      };
+
+      return {
+        form: {
+          title: '',
+          description: '',
+          enterpriseName:'',
+          linkMan: '',
+          phone: '',
+          catalogType: '',
+        },
+        //imgCode:'../admin/rmarket/market/demand/getValidateCode',
+        imgCode:'market/demand/getValidateCode',
+        rules: {
+          title: [
+            { required: true, message: '请输入标题',},
+            { min: 0, max: 50, message: '长度在50个字符内', trigger: 'blur' }
+          ],
+          description: [
+            { required: true, message: '请输入描述', },
+            { min: 0, max: 500, message: '长度在500个字符内', trigger: 'blur' }
+          ],
+          enterpriseName: [
+            { required: true, message: '请输入企业名称',},
+//            { min: 0, max: 50, message: '长度在50个字符内', trigger: 'blur' }
+          ],
+          linkMan: [
+            { required: true, message: '请输入联系人姓名',},
+            { min: 0, max: 50, message: '长度在50个字符内', trigger: 'blur' }
+          ],
+          phone: [
+            { required: true, message: '请输入手机号码',},
+//            { min: 0, max: 11, message: '长度必须是11个数字', trigger: 'blur' },
+            { validator: checkPhone, trigger: "blur"}
+          ],
+          code: [
+            { required: true, message: '请输入图形验证码',},
+            { min: 0, max: 6, message: '长度为5个字符', trigger: 'blur' }
+          ],
+        },
+//        items: [
+//          { type: '', label: '标签一' },
+//          { type: 'success', label: '标签二' },
+//          { type: 'info', label: '标签三' },
+//          { type: 'danger', label: '标签四' },
+//          { type: 'warning', label: '标签五' }
+//        ]
+        tags: [
+          { name: '金融保险',value: 'FINANCIAL_INSURANCE'},
+          { name: '财务税务',value: 'FINANCIAL_TAXATION'},
+          { name: '政府政务',value: 'GOVERNMENT_ADMINISTRATION'},
+          { name: '电子商务',value: 'ELECTRONIC_COMMERCE'},
+          { name: 'IT服务',value: 'IT_SERVICE'},
+          { name: '交通运输',value: 'TRANSPORTATION'},
+          { name: '智能制造',value: 'INTELLIGENT_MANUFACTURING'},
+          { name: '能源',value: 'ENERGY'},
+          { name: '建筑',value: 'ARCHITECTURE'},
+          { name: '其他',value: 'OTHER'},
+        ]
+      }
+    },
+    mounted(){
+      this.getTagsData();
+      //this.getGraphCodeData();
+      let num = Math.ceil(Math.random() * 10000); //生成一个随机数（防止缓存）
+      //this.imgCode = "/ressvcmkt/sys/getValidateCode?" + num;
+      //this.imgCode = "../admin/rmarket/market/demand/getValidateCode?" + num;
+      this.imgCode = "market/demand/getValidateCode?" + num;
+
+//      发布需求：
+//      1.admin登录
+//      2.手机号码登录
+//      3.没有登录
+      let phone = localStorage.getItem('phone');
+      console.log('phone',phone);
+      console.log('typeof phone',typeof phone);
+
+      let enterpriseName = localStorage.getItem('enterpriseName');
+      if(phone !== null) {
+        this.form.phone = localStorage.getItem('phone');
+        console.log('this.form.phone1',this.form.phone);
+      }
+      //当有手机号码的时候
+      //this.form.phone = phone;
+      //admin登录之后，发布需求，phone为'null'字符串时，让this.form.phone为''
+      if(phone === 'null') {
+        this.form.phone = '';
+      }
+      console.log('enterpriseName',enterpriseName);
+      //this.form.enterpriseName = enterpriseName;
+      if(enterpriseName !== null) {
+        this.form.enterpriseName = localStorage.getItem('enterpriseName');
+      }
+    },
+    methods: {
+      getTagsData(){
+        let data = {
+          groupId: 'market',
+        }
+        getTags(data).then(res=>{
+          console.log('data',data);
+          this.tags = res;
+        })
+      },
+      submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.submitEvent();
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      submitEvent() {
+        demandSave(this.form).then(res=>{
+          console.log('res',res);
+          this.$message({
+            message: res,
+            type: 'success'
+          });
+          if( this.$route.query && this.$route.query.flag === 'home' ) {
+            this.$router.push({ path: '/' });
+          }
+          if( this.$route.query && this.$route.query.flag === 'detail' ) {
+            this.$router.push({ path: '/detail' });
+          }
+        }).catch(e=>{
+          //console.log('e',e);
+          let num = Math.ceil(Math.random() * 10000); //生成一个随机数（防止缓存）
+          //this.imgCode = "/ressvcmkt/sys/getValidateCode?" + num;
+          //this.imgCode = "../admin/rmarket/market/demand/getValidateCode?" + num;
+          this.imgCode = "market/demand/getValidateCode?" + num;
+        })
+      },
+      returnEvent() {
+        this.$router.push({ path: '/'})
+      },
+      getGraphCodeData() {
+        getGraphCode().then(res=>{
+          console.log('res',res);
+        })
+      },
+      changeImgCode() {
+        let num = Math.ceil(Math.random() * 10000); //生成一个随机数（防止缓存）
+        //this.imgCode = "/ressvcmkt/sys/getValidateCode?" + num;
+        //this.imgCode = "../admin/rmarket/market/demand/getValidateCode?" + num;
+         this.imgCode = "market/demand/getValidateCode?" + num;
+      },
+
+    }
+  };
+</script>
+
+
+<style lang="scss">
+  .form {
+    .el-textarea__inner {
+      height: 60px;
+    }
+  }
+</style>
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped lang="scss">
+  .demand-container {
+    width: 100%;
+    margin-top: 60px;
+    ::-webkit-input-placeholder{
+      /* WebKit browsers */
+      color: #fff;
+    }
+    :-moz-placeholder{
+      /* Mozilla Firefox 4 to 18 */
+      color: #fff;
+    }
+    ::-moz-placeholder {
+      /* Mozilla Firefox 19+ */
+      color: #fff;
+    }
+    :-ms-input-placeholder {
+      /* Internet Explorer 10+ */
+      color: #fff;
+    }
+    .demand {
+      width: 100%;
+      /*background: #f99;*/
+      .demand-content {
+        width: 1080px;
+        /*background: #9ff;*/
+        padding: 30px;
+        .title {
+          font-size: 22px;
+          color: #333333;
+          padding-bottom: 30px;
+        }
+        .tags {
+          padding: 10px 0;
+        }
+        .form {
+          .img-box {
+            width: 100px;
+            height: 33px;
+            margin-left: 10px;
+            position: absolute;
+            img {
+              width: 100%;
+              height: 100%;
+              cursor: pointer;
+            }
+          }
+        }
+      }
+    }
+  }
+</style>

@@ -1,0 +1,155 @@
+<template>
+  <div class="login-success-container">
+    <HeadLogin :load="false" />
+    <div class="login-box center">
+      <div class="login-content">
+        <div class="icon"></div>
+        <div class="success center">注册成功</div>
+        <div class="desc center">感谢您注册有限元RPA云平台，我们将为您提供更专业的技能、更好的服务</div>
+        <div class="jump center">{{ this.seconds }}秒后将跳转至原页面</div>
+        <div class="return center" @click="returnEvent">
+          <el-button type="text">返回原页面</el-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import { mapGetters } from "vuex";
+  import HeadLogin from "@/views/comment/headlogin";
+  import { login } from "@/api/user";
+  import { dealUrlFun } from '@/utils/index';
+
+  export default {
+    components: {
+      HeadLogin,
+    },
+    name: "Head",
+    props: {
+      msg: String
+    },
+    data() {
+      return {
+        seconds: 5,
+        timer: null,
+        timout: null,
+      }
+    },
+    mounted() {
+      let url = sessionStorage.getItem("url",url);
+      let dealUrl = dealUrlFun(url);
+      //console.log('this.$route.params',this.$route.params);
+      this.timer = setInterval(()=>{
+        this.seconds -= 1;
+        if(this.seconds <= 1) {
+          this.seconds = 1;
+        }
+      },1000);
+
+      //5s之后自动跳转
+      this.timout = setTimeout(()=>{
+        let data = {
+          username: this.$route.params.username,
+          password: this.$route.params.password,
+        }
+        login(data).then(res=>{
+          console.log('login',res);
+          //sessionStorage.setItem('userName',res.realname);
+          //修改：sessionStorage.setItem('userName',res.realname)
+          localStorage.setItem('userName',res.realname);
+          //localStorage.setItem('password',res.password);
+          //5s之后自动登录成功时存储手机号码phone和企业名称enterpriseName。
+          //sessionStorage.setItem('phone',res.phone);
+          //sessionStorage.setItem("enterpriseName",res.enterpriseName);
+          localStorage.setItem('phone',res.phone);
+          localStorage.setItem("enterpriseName",res.enterpriseName);
+          //登录成功之后跳转到原页面
+          this.$router.push({path: dealUrl})
+        })
+      },5000)
+
+    },
+    destoryed() {
+      clearInterval(this.timer);
+    },
+    methods: {
+      //返回原页面
+      returnEvent() {
+        clearTimeout(this.timout);
+        let url = sessionStorage.getItem("url",url);
+
+        let dealUrl = dealUrlFun(url);
+        //clearInterval(this.timer);
+        console.log('this.$route.params',this.$route.params);
+        let data = {
+          username: this.$route.params.username,
+          password: this.$route.params.password,
+        }
+        login(data).then(res=>{
+          console.log('login',res);
+          sessionStorage.setItem('userName',res.realname);
+          //修改：sessionStorage.setItem('userName',res.realname)
+          localStorage.setItem('userName',res.realname);
+          //localStorage.setItem('password',res.password);
+          //点击返回原页面，登录成功之后存储手机号码phone和企业名称enterpriseName。
+          //sessionStorage.setItem('phone',res.phone);
+          //sessionStorage.setItem("enterpriseName",res.enterpriseName);
+          localStorage.setItem('phone',res.phone);
+          localStorage.setItem("enterpriseName",res.enterpriseName);
+          //登录成功之后跳转到原页面
+          console.log('dealUrl---',dealUrl);
+          if(dealUrl) {
+            this.$router.push({path: dealUrl})
+          }else {
+            this.$router.push({path: '/'})
+          }
+        })
+      }
+    }
+  }
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped lang="scss">
+  .login-success-container {
+    width: 100%;
+    height: 100%;
+    background: #eee;
+    .login-box {
+      margin-top: 10px;
+      .login-content {
+        width: 1000px;
+        height: 100%;
+        background: #fff;
+        padding: 49px 0 100px 0;
+        .icon {
+          width: 86px;
+          height: 86px;
+          background: url(./../../assets/index/icon-2.png) -2px 152px;
+          margin: 0 auto;
+        }
+        .success {
+          color: #333;
+          font-size: 28px;
+          margin-top: 20px;
+        }
+        .desc {
+          color: #5A5A5A;
+          font-size: 18px;
+          margin-top: 28px;
+        }
+        .jump {
+          color: #BFBFBF;
+          font-size: 16px;
+          margin-top: 13px;
+        }
+        .return {
+          color: #4865EA;
+          font-size: 14px;
+          margin-top: 58px;
+        }
+      }
+    }
+  }
+</style>

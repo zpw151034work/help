@@ -1,0 +1,496 @@
+<template>
+  <div class="register-container">
+    <HeadLogin :load="false" />
+    <div class="register public-container center">
+      <div class="register-content">
+        <el-form class="register-form">
+          <h3>欢迎注册RPA云账号</h3>
+          <el-input
+            ref="enterpriseName"
+            key="1"
+            v-model.trim="enterpriseName"
+            placeholder="企业名称"
+            autocomplete="off"
+            name="enterpriseName"
+          />
+          <el-input
+            ref="password"
+            key="2"
+            v-model.trim="password"
+            placeholder="密码"
+            show-password
+            autocomplete="off"
+          />
+          <!-- <div slot="content">两次输入密码需相同</div> -->
+          <el-input
+            ref="password2"
+            v-model.trim="password2"
+            placeholder="确认密码"
+            show-password
+            autocomplete="off"
+          />
+
+          <el-input
+            ref="phone"
+            v-model.trim="phone"
+            placeholder="手机号码"
+            maxlength="11"
+            autocomplete="off"
+            @change="phoneChange"
+          />
+
+          <!--暂时注释-->
+          <!--<el-row class="verify-box">-->
+            <!--<el-col :span="6" class="forget">-->
+              <!--<el-input ref="code" v-model.trim="code" placeholder="验证码" />-->
+            <!--</el-col>-->
+            <!--<el-col :span="8" class="once" :offset="2">-->
+              <!--<img-->
+                <!--:src="imgCode"-->
+                <!--style="width: 100%;height: 40px;cursor: pointer;"-->
+                <!--@click="changeImgCode"-->
+              <!--&gt;-->
+            <!--</el-col>-->
+          <!--</el-row>-->
+          <el-row class="verify-box">
+            <el-col :span="13" class="forget">
+              <el-input ref="code" maxlength="6" v-model.trim="code" placeholder="6位短信验证码" @blur="shortCodeBlur"/>
+            </el-col>
+            <el-col :span="8" class="once" :offset="2">
+              <el-button :class="[isActive ? activeClass : disClass]" v-if="isSendCode" :disabled="sendCodeDisabled" @click="sendCodeEvent">
+                发送验证码
+              </el-button>
+              <el-button :class="[isActive ? activeClass : disClass]" :disabled="repeatDisabled" v-if="!isSendCode">
+                重发{{ seconds }}秒
+              </el-button>
+            </el-col>
+
+            <div v-show="isPopup" class="popup container">
+              <div id="captcha"></div>
+              <div id="msg"></div>
+            </div>
+          </el-row>
+          <!--弹出框-->
+
+          <!--使用协议暂时注释-->
+          <!--<el-row class="agreement">-->
+            <!--<el-checkbox v-model="checked" @change="checkedEvent">-->
+              <!--我已阅读并同意-->
+              <!--<a href class="a-blue">《有限元RPA云服务使用协议》</a>-->
+            <!--</el-checkbox>-->
+          <!--</el-row>-->
+
+          <el-row class="register-button">
+            <el-button :class="[isClick ? no : yes]" :disabled="regDisabled" @click="handload">注册</el-button>
+          </el-row>
+          <div class="float-right">
+            <router-link to="/login">
+              <el-button type="text" path="/">使用已有账号登录</el-button>
+            </router-link>
+          </div>
+        </el-form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import "../../styles/jigsaw.scss";
+import { register } from '@/api/user'
+import HeadLogin from '@/views/comment/headlogin'
+import md5 from 'js-md5';
+import jigsaw from '@/utils/jigsaw';
+import { sendShortMsgCode } from '@/api/login';
+import ElButton from "../../../node_modules/element-ui/packages/button/src/button";
+
+export default {
+  name: 'Register',
+  components: {
+    ElButton,
+    HeadLogin
+  },
+  props: {},
+  data() {
+    return {
+      checked: false,
+      input: '',
+      enterpriseName: '',
+      password: '',
+      password2: '',
+      phone: '',
+      code: '',
+      ispassword2: false,
+      isenterpriseName: false,
+      isphone: false,
+      //imgCode: '../../admin/plat/sys/ressvcmkt/getValidateCode?'
+      //imgCode:'../admin/rmarket/market/ressvcmkt/sys/getValidateCode'
+      //imgCode:'admin/v1/ressvcmkt/sys/getValidateCode'
+      imgCode:'admin/v1/sys/ressvcmkt/getValidateCode',
+      isSendCode: true,
+      seconds: 60,
+      timers: null,
+      repeatDisabled: true,
+      sendCodeDisabled: true,
+      isPopup: false,
+      activeClass: 'active',
+      disClass: 'disabled',
+      isActive: false,
+      //注册禁止点击
+      regDisabled: true,
+      isClick: true,
+      yes: 'click',
+      no: 'noClick',
+    }
+  },
+  watch: {
+    code: function(value) {
+      if(value.length === 6) {
+        this.isClick = false;
+        this.regDisabled = false;
+      }else {
+        this.isClick = true;
+        this.regDisabled = true;
+      }
+    },
+    //监听手机号码
+    phone(val) {
+//      if(val.length === 11) {
+//        this.isActive = true;
+//        this.sendCodeDisabled = false;
+//      }else {
+//        console.log(val);
+//        //小于11位的时候，禁止点击和置灰
+//        this.isActive = false;
+//        this.sendCodeDisabled = true;
+//      }
+    }
+  },
+  mounted() {
+    const num = Math.ceil(Math.random() * 10000); // 生成一个随机数（防止缓存）
+    //this.imgCode = '../../admin/plat/sys/ressvcmkt/getValidateCode?' + num;
+    //this.imgCode = '../admin/rmarket/market/ressvcmkt/sys/getValidateCode?' + num;
+    //this.imgCode = 'admin/v1/ressvcmkt/sys/getValidateCode?' + num;
+    this.imgCode = 'admin/v1/sys/ressvcmkt/getValidateCode?' + num;
+    //this.initData();
+  },
+  methods: {
+    initData() {
+      let _this = this;
+      jigsaw.init({
+        el: document.getElementById('captcha'),
+        onSuccess: function() {
+          //成功之后就清除定时器
+          //clearInterval(_this.timers);
+          //document.getElementById('msg').innerHTML = '登录成功！'
+          setTimeout(()=>{
+            _this.isPopup = false;
+          },500);
+          //成功之后
+          setTimeout(()=>{
+            var elem = document.getElementById('captcha');
+            //成功之后让里面的内容为""
+            elem.innerHTML = '';
+          },500);
+
+          //发送验证码成功之后seconds为60
+          _this.seconds = 60;
+          //隐藏发送验证码
+          _this.isSendCode = false;
+          //1分钟倒计时
+          _this.timers = setInterval(()=>{
+            _this.seconds -= 1;
+            if(_this.seconds <= 0) {
+              //每次在定时器结束时清除定时器
+              clearInterval(_this.timers);
+              //重发
+              _this.repeatDisabled = false;
+              _this.seconds = 0;
+              //倒计时结束之后，验证码可以点击
+              _this.sendCodeDisabled = false;
+              //蓝色
+              _this.isActive = true;
+              //显示验证码
+              _this.isSendCode = true;
+            }
+          },1000);
+          //成功之后调用短信接口
+          //发送短信，调用接口
+          const fd = new FormData();
+          fd.append('phone',_this.phone);
+          sendShortMsgCode(fd).then(res=> {
+            //console.log('在这里调用接口',res);
+          })
+        },
+        onFail: this.cleanMsg,
+        onRefresh: this.cleanMsg
+      }).init()
+
+      //console.log(jigsaw);
+    },
+    //注册
+    handload() {
+      const dataCode = {
+        enterpriseName: this.$refs.enterpriseName.value,
+        phone: this.$refs.phone.value,
+        password: md5(this.$refs.password.value),
+        password2: md5(this.$refs.password2.value),
+        code: this.$refs.code.value
+      }
+      // alert(this.$refs.enterpriseName.value.trim());
+      if (
+        !this.$refs.enterpriseName.value &&
+        this.$refs.enterpriseName.value.length <= 0
+      ) {
+        this.$message({
+          showClose: true,
+          message: '企业名称不能为空',
+          type: 'warning'
+        })
+        return false
+      }
+
+      if (this.$refs.password.value) {
+//        if (this.$refs.password.value.length < 8) {
+//          this.$message({
+//            showClose: true,
+//            message: '设置密码不少于8位',
+//            type: 'warning'
+//          })
+//          return false
+//        }
+        var pwdRegex = new RegExp('(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z]).{8,16}');
+        if(!pwdRegex.test(this.$refs.password.value)){
+          //debugger
+          this.$message({
+            showClose: true,
+            message: '密码中必须包含大小写字母、数字,并且8-16个字符',
+            type: 'warning'
+          })
+          return false
+        }
+      } else {
+        this.$message({
+          showClose: true,
+          message: '设置密码不能为空',
+          type: 'warning'
+        })
+        return false
+      }
+
+      if (this.$refs.password.value !== this.$refs.password2.value) {
+        this.$message({
+          showClose: true,
+          message: '设置密码不能为空且需要保持一致',
+          type: 'warning'
+        })
+        return false
+      }
+
+
+
+      const TEL_REGEXP = /^1([38]\d|5[0-35-9]|7[3678])\d{8}$/
+
+      if (this.$refs.phone.value) {
+        if (!TEL_REGEXP.test(this.$refs.phone.value)) {
+          this.$message({
+            showClose: true,
+            message: '手机号不合规',
+            type: 'warning'
+          })
+          return false
+        }
+      } else {
+        this.$message({
+          showClose: true,
+          message: '手机号不能为空',
+          type: 'warning'
+        })
+
+        return false
+      }
+      register(dataCode)
+        .then(res => {
+          //console.log('this.$route.query.flag',this.$route.query.flag);
+          //this.$router.push('/loginSuccess');
+          //从注册的原页面得到路径，然后传参数给注册成功的页面
+          //let flag = this.$route.query && this.$route.query.flag;
+          this.$router.push({
+            name: 'loginSuccess',
+            params: {
+              username: this.$refs.phone.value,
+              password: this.$refs.password2.value,
+              //flag
+            }
+          })
+        })
+        .catch(e => {
+          //console.log(e)
+          const num = Math.ceil(Math.random() * 10000) // 生成一个随机数（防止缓存）
+          //this.imgCode = '../../admin/plat/sys/ressvcmkt/getValidateCode?' + num;
+          //this.imgCode = '../admin/rmarket/market/ressvcmkt/sys/getValidateCode?' + num;
+          //this.imgCode = 'admin/v1/sys/ressvcmkt/getValidateCode?' + num;
+          this.imgCode = 'admin/v1/sys/ressvcmkt/getValidateCode?' + num;
+        })
+    },
+    changeImgCode() {
+      const num = Math.ceil(Math.random() * 10000); // 生成一个随机数（防止缓存）
+      this.imgCode = 'admin/v1/sys/ressvcmkt/getValidateCode?' + num
+      //this.imgCode = '../admin/rmarket/market/ressvcmkt/sys/getValidateCode?' + num;
+    },
+    //发送验证码
+    sendCodeEvent() {
+      this.initData();
+      //验证码置灰
+      this.isActive = false;
+      //是否弹出框
+      this.isPopup = true;
+    },
+    cleanMsg() {
+      document.getElementById('msg').innerHTML = '';
+    },
+
+    //暂时注释
+//    checkedEvent(value) {
+//      console.log('value',value);
+//      if(value) {
+//        this.isClick = false;
+//        this.regDisabled = false;
+//      }else {
+//        this.isClick = true;
+//        this.regDisabled = true;
+//      }
+//    },
+
+    //输入6位短信验证码之后注册按钮的状态改变
+    shortCodeBlur(value) {
+//      if(value.length === 6) {
+//        this.isClick = false;
+//        this.regDisabled = false;
+//      }else {
+//        this.isClick = true;
+//        this.regDisabled = true;
+//      }
+    },
+    //手机号码失去焦点的时候
+    phoneChange(val) {
+      console.log(val);
+      if(val.length === 11) {
+        if(this.seconds >0 && this.seconds < 60) {
+          this.isActive = false;
+          this.sendCodeDisabled = true;
+        }else {
+          this.isActive = true;
+          this.sendCodeDisabled = false;
+        }
+      }else {
+        console.log(val);
+        //小于11位的时候，禁止点击和置灰
+        this.isActive = false;
+        this.sendCodeDisabled = true;
+
+      }
+    }
+  },
+  destroyed() {
+      clearInterval(this.timers);
+  },
+}
+</script>
+
+<style  lang="scss" >
+.register-container {
+  width: 100%;
+  height: 100%;
+  background: #eee;
+  .el-input__inner {
+    height: 40px;
+  }
+  .register {
+    //width: 100%;
+
+    //padding-bottom: 100px;
+
+    //background: #eee;
+    .register-content {
+      width: 1000px;
+      //height: 600px;
+      background: #fff;
+      //margin-top: 20px;
+      h3 {
+        font-size: 22px;
+
+        font-weight: 500;
+        color: rgba(51, 51, 51, 1);
+        //margin-top: 37px;
+        text-align: center;
+        //margin-bottom: 37px;
+        margin: 17px 0;
+      }
+      .register-form {
+        width: 350px;
+        margin: 0px auto;
+        .el-input {
+          margin-bottom: 29px;
+          height: 40px;
+          .el-input__inner {
+            height: 40px;
+          }
+        }
+        .verify-box {
+          .active {
+            background: rgba(42, 90, 215, 1) !important;
+          }
+          .disabled {
+            background: #ccc !important;
+          }
+          position: relative;
+          .el-button {
+            width: 120px;
+            height: 40px;
+            background: rgba(42, 90, 215, 1);
+            color: #fff;
+            text-align: center;
+            padding: 0px;
+          }
+          .popup {
+            width:100%;
+            padding: 10px;
+            box-sizing: border-box;
+            background: #fff;
+            border: 1px solid #ccc;
+            position: absolute;
+            top: 0;
+            z-index: 999;
+            /*display: none;*/
+          }
+        }
+        .agreement {
+          font-size: 12px;
+          margin-bottom: 35px;
+        }
+        .el-checkbox__label {
+          color: #737373;
+        }
+        .register-button {
+          .el-button {
+            width: 100%;
+            height: 40px;
+            background: rgba(42, 90, 215, 1);
+            color: #fff;
+            text-align: center;
+            padding: 0px;
+            border-radius: 4px;
+          }
+        }
+        .click {
+          background: #2a5ad7 !important;
+        }
+        .noClick {
+          background: #ccc !important;
+        }
+      }
+    }
+  }
+}
+</style>
+
